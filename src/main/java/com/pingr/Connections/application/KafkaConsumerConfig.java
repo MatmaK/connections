@@ -2,6 +2,7 @@ package com.pingr.Connections.application;
 
 import com.pingr.Connections.core.Account;
 import com.pingr.Connections.core.events.AccountCreatedEvent;
+import com.pingr.Connections.core.events.AccountDeletedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,10 +58,7 @@ public class KafkaConsumerConfig {
         return factory;
     }
 
-
-    // =======================
-
-
+    // ACCOUNT CREATED
     public ConsumerFactory<String, AccountCreatedEvent> accountCreatedEventConsumerFactory() {
         JsonDeserializer<AccountCreatedEvent> jsonDeserializer = new JsonDeserializer<>(AccountCreatedEvent.class);
         jsonDeserializer.setUseTypeMapperForKey(true);
@@ -83,8 +81,25 @@ public class KafkaConsumerConfig {
         return factory;
     }
 
+    // ACCOUNT DELETED
+    public ConsumerFactory<String, AccountDeletedEvent> accountDeletedEventConsumerFactory() {
+        JsonDeserializer<AccountDeletedEvent> jsonDeserializer = new JsonDeserializer<>(AccountDeletedEvent.class);
+        jsonDeserializer.setUseTypeMapperForKey(true);
+        jsonDeserializer.addTrustedPackages("*");
 
-    // ==========================
+        return new DefaultKafkaConsumerFactory<>(
+                consumerConfig(),
+                new StringDeserializer(),
+                jsonDeserializer
+        );
+    }
 
+    @Bean
+    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, AccountDeletedEvent>> accountDeletedEventKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, AccountDeletedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(accountDeletedEventConsumerFactory());
+
+        return factory;
+    }
 
 }

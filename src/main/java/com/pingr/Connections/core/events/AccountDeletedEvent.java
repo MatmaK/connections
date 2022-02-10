@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Map;
 
 @JsonSerialize
-public class AccountCreatedEvent extends AccountEvent {
-    public AccountCreatedEvent() {
+public class AccountDeletedEvent extends AccountEvent {
+    public AccountDeletedEvent() {
     }
 
-    public AccountCreatedEvent(String eventType, Long accountId, Map<String, Object> payload) {
+    public AccountDeletedEvent(String eventType, Long accountId, Map<String, Object> payload) {
         super(eventType, accountId, payload);
     }
 }
