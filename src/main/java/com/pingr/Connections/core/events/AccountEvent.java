@@ -1,7 +1,7 @@
 package com.pingr.Connections.core.events;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.pingr.Connections.core.Account;
+import com.pingr.Connections.core.Accounts.Account;
 
 import java.util.Map;
 

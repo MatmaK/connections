@@ -1,6 +1,6 @@
 package com.pingr.Connections.application;
 
-import com.pingr.Connections.core.Account;
+import com.pingr.Connections.core.Accounts.Account;
 import com.pingr.Connections.core.events.AccountCreatedEvent;
 import com.pingr.Connections.core.events.AccountDeletedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

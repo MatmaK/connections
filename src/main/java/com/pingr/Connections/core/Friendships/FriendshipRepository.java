@@ -11,10 +11,11 @@ import java.util.Optional;
 
 @Repository
 public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
-    @Query(value = "SELECT * FROM friendship WHERE id_account_applied = ?1 OR id_account_received = ?1", nativeQuery = true)
+    @Query("SELECT f FROM Friendship f WHERE f.idAccountApplied = ?1 OR f.idAccountReceived = ?1")
     List<Friendship> findAllFriends(Long idAccount);
 
-    Optional<Friendship> findFriendshipByIdAccountAppliedAndAndIdAccountReceived(Long idAccountApplied, Long idAccountReceived);
+    @Query("SELECT f FROM Friendship f WHERE f.idAccountApplied in (?1, ?2) AND f.idAccountReceived in (?1, ?2)")
+    Optional<Friendship> findFriendship(Long idAccountApplied, Long idAccountReceived);
 
     @Query("SELECT count(f.id) FROM Friendship f WHERE f.idAccountApplied = ?1 OR f.idAccountReceived = ?1")
     Long countAllFriends(Long idAccount);

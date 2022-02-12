@@ -1,5 +1,6 @@
 package com.pingr.Connections.core.Friendships;
 
+import com.pingr.Connections.core.Accounts.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,24 +10,26 @@ import java.util.Optional;
 
 @Service
 public class FriendshipService {
-    private FriendshipRepository repo;
+    private FriendshipRepository friendshipRepo;
+    private AccountRepository accountRepo;
 
     @Autowired
-    public FriendshipService(FriendshipRepository repo) {
-        this.repo = repo;
+    public FriendshipService(FriendshipRepository friendshipRepo, AccountRepository accountRepo) {
+        this.friendshipRepo = friendshipRepo;
+        this.accountRepo = accountRepo;
     }
 
     public boolean areAlreadyFriends (Friendship friendship) {
-        Optional<Friendship> opt = repo.findFriendshipByIdAccountAppliedAndAndIdAccountReceived(friendship.getIdAccountApplied(), friendship.getIdAccountReceived());
+        Optional<Friendship> opt = friendshipRepo.findFriendship(friendship.getIdAccountApplied(), friendship.getIdAccountReceived());
         return opt.isPresent();
     }
 
     public List<Friendship> findFriendsOfOneAccount(Long idAccount) {
-        return repo.findAllFriends(idAccount);
+        return friendshipRepo.findAllFriends(idAccount);
     }
 
     public Long countFriendsOfOneAccount(Long idAccount) {
-        return repo.countAllFriends(idAccount);
+        return friendshipRepo.countAllFriends(idAccount);
     }
 
     public Friendship create(Friendship friendship) {
@@ -36,10 +39,14 @@ public class FriendshipService {
         if (areAlreadyFriends(friendship))
             throw new IllegalArgumentException("They are already friends");
 
-        return repo.save(friendship);
+        boolean accountsExist = accountRepo.existsById(friendship.getIdAccountApplied()) && accountRepo.existsById(friendship.getIdAccountReceived());
+        if(!accountsExist)
+            throw new IllegalArgumentException("Account id not found");
+
+        return friendshipRepo.save(friendship);
     }
 
     public void cancel(Long idAccount1, Long idAccount2) {
-        repo.deleteFriendship(idAccount1, idAccount2);
+        friendshipRepo.deleteFriendship(idAccount1, idAccount2);
     }
 }

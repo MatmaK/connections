@@ -1,4 +1,4 @@
-package com.pingr.Connections.core;
+package com.pingr.Connections.core.Accounts;
 
 import javax.persistence.*;
 
