@@ -1,6 +1,7 @@
 package com.pingr.Connections.core.Friendships;
 
 import javax.persistence.*;
+import java.util.Map;
 
 @Entity
 @Table
@@ -56,5 +57,13 @@ public class Friendship {
 
     public void setIdAccountReceived(Long idAccountReceived) {
         this.idAccountReceived = idAccountReceived;
+    }
+
+    public Map<String, Object> toMap() {
+        return Map.of(
+                "id", id,
+                "idAccountApplied", idAccountApplied,
+                "idAccountReceived", idAccountReceived
+        );
     }
 }
