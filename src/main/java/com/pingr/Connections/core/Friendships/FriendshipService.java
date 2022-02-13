@@ -2,6 +2,8 @@ package com.pingr.Connections.core.Friendships;
 
 import com.pingr.Connections.application.ProducerService;
 import com.pingr.Connections.core.Accounts.AccountRepository;
+import com.pingr.Connections.core.exceptions.AccountNotFoundException;
+import com.pingr.Connections.core.exceptions.FriendshipNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +32,7 @@ public class FriendshipService {
         return friendshipRepo.countAllFriends(idAccount);
     }
 
-    public Friendship create(Friendship friendship) {
+    public Friendship create(Friendship friendship) throws AccountNotFoundException, IllegalArgumentException {
         if (friendship.getIdAccountApplied() == friendship.getIdAccountReceived())
             throw new IllegalArgumentException("An account can't be friend of itself");
 
@@ -38,17 +40,23 @@ public class FriendshipService {
             throw new IllegalArgumentException("They are already friends");
 
         if(! accountsExist(friendship))
-            throw new IllegalArgumentException("Account id not found");
+            throw new AccountNotFoundException();
 
-        Friendship savedFriendship = friendshipRepo.save(friendship);
-        this.producer.emitFriendshipCreatedEvent(savedFriendship);
-        return savedFriendship;
+        try {
+            Friendship savedFriendship = friendshipRepo.save(friendship);
+            this.producer.emitFriendshipCreatedEvent(savedFriendship);
+            return savedFriendship;
+        }
+        catch (Exception e) {
+            throw new IllegalArgumentException("Something went wrong");
+        }
+
     }
 
-    public void cancel(Long idAccount1, Long idAccount2) {
+    public void delete(Long idAccount1, Long idAccount2) throws FriendshipNotFoundException {
         Optional<Friendship> optFriendship = friendshipRepo.findFriendship(idAccount1, idAccount2);
         if (optFriendship.isEmpty())
-            throw new IllegalArgumentException("There is no friendship between these IDs");
+            throw new FriendshipNotFoundException(idAccount1, idAccount2);
 
         this.producer.emitFriendshipDeletedEvent(optFriendship.get());
         friendshipRepo.deleteFriendship(idAccount1, idAccount2);

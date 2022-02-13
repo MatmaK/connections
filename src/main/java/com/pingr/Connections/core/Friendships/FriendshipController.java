@@ -1,6 +1,7 @@
 package com.pingr.Connections.core.Friendships;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,12 +28,13 @@ public class FriendshipController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Friendship create(@RequestBody Friendship friendship) {
         return service.create(friendship);
     }
 
     @DeleteMapping("/{idAccount1}/{idAccount2}")
     public void cancel(@PathVariable("idAccount1") Long idAccount1, @PathVariable("idAccount2") Long idAccount2) {
-        service.cancel(idAccount1, idAccount2);
+        service.delete(idAccount1, idAccount2);
     }
 }
