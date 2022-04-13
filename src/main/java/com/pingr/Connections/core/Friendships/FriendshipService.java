@@ -38,47 +38,29 @@ public class FriendshipService {
         return friendshipRepo.countFriendshipsByFriendshipIdentity_FirstIdAccount(idAccount);
     }
 
-    public Friendship create(FriendshipIdentity friendshipId) throws AccountNotFoundException, IllegalArgumentException {
-        if (friendshipId.areSameId())
-            throw new IllegalArgumentException("An account can't be friend of itself");
+    public Friendship create(FriendshipIdentity friendshipId) {
+        validateNewFriendship(friendshipId);
 
-        if (areAlreadyFriends(friendshipId))
-            throw new IllegalArgumentException("They are already friends");
+        Friendship savedFriendship = friendshipRepo.save(new Friendship(friendshipId));
 
-        if(! accountsExist(friendshipId))
-            throw new AccountNotFoundException();
+        //Reverse friendship to they be friends of each other
+        Friendship reverseFriendship = new Friendship(friendshipId.reverse());
+        friendshipRepo.save(reverseFriendship);
 
-        try {
-            Friendship savedFriendship = friendshipRepo.save(new Friendship(friendshipId));
+        this.producer.emitFriendshipCreatedEvent(savedFriendship);
 
-            //Reverse friendship to they be friends of each other
-            Friendship reverseFriendship = new Friendship(friendshipId.reverse());
-            friendshipRepo.save(reverseFriendship);
-
-            this.producer.emitFriendshipCreatedEvent(savedFriendship);
-
-            return savedFriendship;
-        }
-        catch (Exception e) {
-            throw new IllegalArgumentException("Something went wrong");
-        }
+        return savedFriendship;
     }
 
-    public void delete(Long[] accountsIds) throws FriendshipNotFoundException, AccountNotFoundException {
+    public void delete(Long[] accountsIds) {
+        Friendship friendship = new Friendship(new FriendshipIdentity(accountsIds));
+        validateDeleteFriendship(friendship);
 
-        if(!accountsExist(new FriendshipIdentity(accountsIds)))
-            throw new AccountNotFoundException();
-
-        Optional<Friendship> optFriendship = friendshipRepo.findById(new FriendshipIdentity(accountsIds));
-
-        if (optFriendship.isEmpty())
-            throw new FriendshipNotFoundException(accountsIds);
-
-        friendshipRepo.delete(optFriendship.get());
-        Friendship reverseFriendship = new Friendship(optFriendship.get().getFriendshipIdentity().reverse());
+        friendshipRepo.delete(friendship);
+        Friendship reverseFriendship = new Friendship(friendship.getFriendshipIdentity().reverse());
         friendshipRepo.delete(reverseFriendship);
 
-        this.producer.emitFriendshipDeletedEvent(optFriendship.get());
+        this.producer.emitFriendshipDeletedEvent(friendship);
     }
 
     private boolean areAlreadyFriends (FriendshipIdentity friendshipId) {
@@ -88,5 +70,24 @@ public class FriendshipService {
     private boolean accountsExist(FriendshipIdentity friendshipId) {
         return accountRepo.existsById(friendshipId.getFirstIdAccount())
                 && accountRepo.existsById(friendshipId.getSecondIdAccount());
+    }
+
+    private void validateNewFriendship(FriendshipIdentity friendshipId) throws AccountNotFoundException, IllegalArgumentException {
+        if (areAlreadyFriends(friendshipId))
+            throw new IllegalArgumentException("They are already friends");
+
+        if (!accountsExist(friendshipId))
+            throw new AccountNotFoundException();
+
+        if (friendshipId.areSameId())
+            throw new IllegalArgumentException("An account can't be friend of itself");
+    }
+
+    private void validateDeleteFriendship(Friendship friendship) throws FriendshipNotFoundException, AccountNotFoundException {
+        if(!accountsExist(friendship.getFriendshipIdentity()))
+            throw new AccountNotFoundException();
+
+        if (!friendshipRepo.existsById(friendship.getFriendshipIdentity()))
+            throw new FriendshipNotFoundException(friendship.getFriendshipIdentity().arrayOfAccountsIds());
     }
 }

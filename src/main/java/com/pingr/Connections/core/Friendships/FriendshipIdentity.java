@@ -4,6 +4,7 @@ import com.sun.istack.NotNull;
 
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.List;
 
 @Embeddable
 public class FriendshipIdentity implements Serializable {
@@ -24,6 +25,10 @@ public class FriendshipIdentity implements Serializable {
     public FriendshipIdentity(Long[] accountsIds) {
         this.firstIdAccount = accountsIds[0];
         this.secondIdAccount = accountsIds[1];
+    }
+
+    public Long[] arrayOfAccountsIds() {
+        return new Long[] {firstIdAccount, secondIdAccount};
     }
 
     public Long getFirstIdAccount() {
