@@ -24,11 +24,17 @@ public class FriendshipService {
         this.producer = producer;
     }
 
-    public List<Friendship> findFriendsOfOneAccount(Long idAccount) {
+    public List<Friendship> findFriendsOfOneAccount(Long idAccount) throws AccountNotFoundException {
+        if (!accountRepo.existsById(idAccount))
+            throw new AccountNotFoundException(idAccount);
+
         return friendshipRepo.findAllByFriendshipIdentity_FirstIdAccount(idAccount);
     }
 
-    public Integer countFriendsOfOneAccount(Long idAccount) {
+    public Integer countFriendsOfOneAccount(Long idAccount) throws AccountNotFoundException {
+        if (!accountRepo.existsById(idAccount))
+            throw new AccountNotFoundException(idAccount);
+
         return friendshipRepo.countFriendshipsByFriendshipIdentity_FirstIdAccount(idAccount);
     }
 
@@ -56,15 +62,17 @@ public class FriendshipService {
         catch (Exception e) {
             throw new IllegalArgumentException("Something went wrong");
         }
-
     }
 
-    public void delete(Long idAccount1, Long idAccount2) throws FriendshipNotFoundException {
+    public void delete(Long[] accountsIds) throws FriendshipNotFoundException, AccountNotFoundException {
 
-        Optional<Friendship> optFriendship = friendshipRepo.findById(new FriendshipIdentity(idAccount1, idAccount2));
+        if(!accountsExist(new FriendshipIdentity(accountsIds)))
+            throw new AccountNotFoundException();
+
+        Optional<Friendship> optFriendship = friendshipRepo.findById(new FriendshipIdentity(accountsIds));
 
         if (optFriendship.isEmpty())
-            throw new FriendshipNotFoundException(idAccount1, idAccount2);
+            throw new FriendshipNotFoundException(accountsIds);
 
         friendshipRepo.delete(optFriendship.get());
         Friendship reverseFriendship = new Friendship(optFriendship.get().getFriendshipIdentity().reverse());

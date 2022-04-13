@@ -21,6 +21,11 @@ public class FriendshipIdentity implements Serializable {
         this.secondIdAccount = secondIdAccount;
     }
 
+    public FriendshipIdentity(Long[] accountsIds) {
+        this.firstIdAccount = accountsIds[0];
+        this.secondIdAccount = accountsIds[1];
+    }
+
     public Long getFirstIdAccount() {
         return firstIdAccount;
     }
