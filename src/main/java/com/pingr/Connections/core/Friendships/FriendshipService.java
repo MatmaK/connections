@@ -25,26 +25,32 @@ public class FriendshipService {
     }
 
     public List<Friendship> findFriendsOfOneAccount(Long idAccount) {
-        return friendshipRepo.findAllFriends(idAccount);
+        return friendshipRepo.findAllByFriendshipIdentity_FirstIdAccount(idAccount);
     }
 
-    public Long countFriendsOfOneAccount(Long idAccount) {
-        return friendshipRepo.countAllFriends(idAccount);
+    public Integer countFriendsOfOneAccount(Long idAccount) {
+        return friendshipRepo.countFriendshipsByFriendshipIdentity_FirstIdAccount(idAccount);
     }
 
-    public Friendship create(Friendship friendship) throws AccountNotFoundException, IllegalArgumentException {
-        if (friendship.getIdAccountApplied() == friendship.getIdAccountReceived())
+    public Friendship create(FriendshipIdentity friendshipId) throws AccountNotFoundException, IllegalArgumentException {
+        if (friendshipId.areSameId())
             throw new IllegalArgumentException("An account can't be friend of itself");
 
-        if (areAlreadyFriends(friendship))
+        if (areAlreadyFriends(friendshipId))
             throw new IllegalArgumentException("They are already friends");
 
-        if(! accountsExist(friendship))
+        if(! accountsExist(friendshipId))
             throw new AccountNotFoundException();
 
         try {
-            Friendship savedFriendship = friendshipRepo.save(friendship);
+            Friendship savedFriendship = friendshipRepo.save(new Friendship(friendshipId));
+
+            //Reverse friendship to they be friends of each other
+            Friendship reverseFriendship = new Friendship(friendshipId.reverse());
+            friendshipRepo.save(reverseFriendship);
+
             this.producer.emitFriendshipCreatedEvent(savedFriendship);
+
             return savedFriendship;
         }
         catch (Exception e) {
@@ -54,20 +60,25 @@ public class FriendshipService {
     }
 
     public void delete(Long idAccount1, Long idAccount2) throws FriendshipNotFoundException {
-        Optional<Friendship> optFriendship = friendshipRepo.findFriendship(idAccount1, idAccount2);
+
+        Optional<Friendship> optFriendship = friendshipRepo.findById(new FriendshipIdentity(idAccount1, idAccount2));
+
         if (optFriendship.isEmpty())
             throw new FriendshipNotFoundException(idAccount1, idAccount2);
 
+        friendshipRepo.delete(optFriendship.get());
+        Friendship reverseFriendship = new Friendship(optFriendship.get().getFriendshipIdentity().reverse());
+        friendshipRepo.delete(reverseFriendship);
+
         this.producer.emitFriendshipDeletedEvent(optFriendship.get());
-        friendshipRepo.deleteFriendship(idAccount1, idAccount2);
     }
 
-    private boolean areAlreadyFriends (Friendship friendship) {
-        Optional<Friendship> opt = friendshipRepo.findFriendship(friendship.getIdAccountApplied(), friendship.getIdAccountReceived());
-        return opt.isPresent();
+    private boolean areAlreadyFriends (FriendshipIdentity friendshipId) {
+        return friendshipRepo.existsById(friendshipId);
     }
 
-    private boolean accountsExist(Friendship friendship) {
-        return accountRepo.existsById(friendship.getIdAccountApplied()) && accountRepo.existsById(friendship.getIdAccountReceived());
+    private boolean accountsExist(FriendshipIdentity friendshipId) {
+        return accountRepo.existsById(friendshipId.getFirstIdAccount())
+                && accountRepo.existsById(friendshipId.getSecondIdAccount());
     }
 }

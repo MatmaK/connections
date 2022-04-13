@@ -10,18 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
-    @Query("SELECT f FROM Friendship f WHERE f.idAccountApplied = ?1 OR f.idAccountReceived = ?1")
-    List<Friendship> findAllFriends(Long idAccount);
+public interface FriendshipRepository extends JpaRepository<Friendship, FriendshipIdentity> {
+    Integer countFriendshipsByFriendshipIdentity_FirstIdAccount(Long id);
 
-    @Query("SELECT f FROM Friendship f WHERE f.idAccountApplied in (?1, ?2) AND f.idAccountReceived in (?1, ?2)")
-    Optional<Friendship> findFriendship(Long idAccountApplied, Long idAccountReceived);
-
-    @Query("SELECT count(f.id) FROM Friendship f WHERE f.idAccountApplied = ?1 OR f.idAccountReceived = ?1")
-    Long countAllFriends(Long idAccount);
-
-    @Transactional
-    @Modifying
-    @Query("DELETE FROM Friendship f WHERE f.idAccountApplied in (?1, ?2) AND f.idAccountReceived in (?1, ?2)")
-    void deleteFriendship(Long idAccount1, Long idAccount2);
+    List<Friendship> findAllByFriendshipIdentity_FirstIdAccount(Long id);
 }

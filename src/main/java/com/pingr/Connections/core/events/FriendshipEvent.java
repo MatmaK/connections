@@ -9,14 +9,10 @@ abstract class FriendshipEvent {
     protected final String eventType;
 
     @JsonProperty
-    protected final Long friendshipId;
-
-    @JsonProperty
     protected final Map<String, Object> payload;
 
-    protected FriendshipEvent(Long friendshipId, Map<String, Object> payload) {
+    protected FriendshipEvent(Map<String, Object> payload) {
         this.eventType = this.getClass().getSimpleName();
-        this.friendshipId = friendshipId;
         this.payload = payload;
     }
 }

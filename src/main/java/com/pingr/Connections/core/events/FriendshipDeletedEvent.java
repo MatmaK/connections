@@ -6,13 +6,12 @@ import java.util.Map;
 
 public class FriendshipDeletedEvent extends FriendshipEvent{
 
-    protected FriendshipDeletedEvent(Long friendshipId, Map<String, Object> payload) {
-        super(friendshipId, payload);
+    protected FriendshipDeletedEvent(Map<String, Object> payload) {
+        super(payload);
     }
 
     public static FriendshipDeletedEvent of(Friendship friendship) {
         return new FriendshipDeletedEvent(
-                friendship.getId(),
                 friendship.toMap()
         );
     }

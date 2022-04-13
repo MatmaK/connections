@@ -23,14 +23,14 @@ public class FriendshipController {
     }
 
     @GetMapping("/count/{idAccount}")
-    public Long countFriendsOfOneAccount(@PathVariable("idAccount") Long idAccount) {
+    public Integer countFriendsOfOneAccount(@PathVariable("idAccount") Long idAccount) {
         return service.countFriendsOfOneAccount(idAccount);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Friendship create(@RequestBody Friendship friendship) {
-        return service.create(friendship);
+    public Friendship create(@RequestBody FriendshipIdentity friendshipId) {
+        return service.create(friendshipId);
     }
 
     @DeleteMapping("/{idAccount1}/{idAccount2}")
